@@ -1,0 +1,7 @@
+# V3.0.4A — separate local AI chat preview
+
+- Operator 4ff7259: 84/84 regression PASS. Flash-Lite cases 2 and 3 targeted live PASS; across B6 and B7 all six cases passed. Reviewed answer: MY25 7 forward and 1 reverse; MY2026 camera standard trim correctly distinguished. No claim of full production QA.
+- New separate loopback preview 127.0.0.1:8790, private internal gateway 127.0.0.1:8791, ephemeral server-side bearer token, explicit consent, Flash-Lite. Same-origin JSON POST, fixed static asset allowlist, no corpus or key served. Existing gateway and stable V2.2 untouched. No public deployment or billing changes.
+- UI: Macedonian chat, four fixed suggestions, local refusal, page IDs and fitment notice, loading state, clear, provider error and retry-by-user. No conversation storage or multi-turn context. Only four fixed reviewed prompts supported; general retrieval not enabled. No direct source PDF viewer yet.
+- Node v22.16.0 regression 87/87 PASS (84 prior + 3 new test cases), including mocked provider through real loopback HTTP. Chromium browser navigation blocked by environment administrator; no visual/browser QA claimed. Windows launcher and live browser smoke test pending. Local OS processes can access loopback; preview is not internet-facing authentication.
+- Next: operator preview QA; expand evidence retrieval and local verified facts, then authenticated HTTPS and Android tests. No API keys or source corpus in patch.
