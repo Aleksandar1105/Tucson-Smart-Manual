@@ -23,7 +23,13 @@
 - Retry explicit upstream HTTP 503 only: at most two retries (2 s, 4 s), respect Retry-After up to 10 s, stop if longer; shared 45 s abort deadline. No retry on quota (429), client errors, network failures, or rejected citations. Retries may count toward provider quota.
 - Eight new mocked tests; live verification pending. Local consent and provenance constraints unchanged. No deployment changes.
 
+
 ## V3.0.3B5 — clarify source scope and targeted retest
 - Operator: ff5a00f regression 76/76; dded361 diagnostic run 3/5, plus prior test 1 PASS. DCT returned insufficient despite relevant evidence (1715 tokens); camera returned HTTP 503; wireless 15 W and both local refusals PASS. Root cause of provider 503 unknown; no extra retries.
 - Clarify gear-count evidence without unrelated clutch-construction uncertainty; retain provisional source classification. Camera evidence distinguishes standard trim from individual fitment. Two additional regression tests. Local Node test run 78/78 PASS before publishing; live and PowerShell verification pending.
 - RetestFailed switch runs only cases 2 and 3; 10-second pause between calls. No changes to model, credentials, consent, retry policy or production deployment. If recurring failures, evaluate an alternative available free-tier model before any HTTPS deployment.
+
+## V3.0.3B6 — alternative model evaluation
+- Operator at 26c85a0: 78/78 regression PASS. Camera answer correctly distinguishes Impression equipment from Premium standard and individual fitment; DCT timed out. Across live runs Hydrogen passed five of six cases; no complete successful run. Underlying provider/network issue remains unknown.
+- Add explicit server-side model allowlist (Hydrogen remains default; Gemini 3.5 Flash-Lite is an opt-in evaluation candidate). Same structured schema, evidence selection, validation, request deadline and retry policy. No automatic fallback, no arbitrary model from request, no billing activation. Google pricing lists free standard Flash-Lite input/output; account quota and availability remain to be tested.
+- Four new mocked regression tests; local Node 22.16.0 full suite 82/82 PASS. PowerShell wrapper and live alternate model test pending. Run all six original cases via test-flash-lite.ps1; review factual correctness manually, particularly DCT (7 forward, 1 reverse, provisional MY25 source). Do not interpret structural checks as proof of factual accuracy. No deployment changes; V2.2 unchanged.
