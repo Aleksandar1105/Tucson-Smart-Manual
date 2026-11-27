@@ -2,7 +2,7 @@ import {catalog} from './catalog.mjs';
 export const MODEL='gemini-3.5-flash-lite';
 export const DAILY=20, MINUTE=3;
 const json=(status,data)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'}});
-const error=(status,code)=>json(status,{error:code});
+const error=(status,code,diagnostic)=>json(status,{error:code,...(diagnostic?{diagnostic}:{})});
 const schema={type:'OBJECT',properties:{status:{type:'STRING',enum:['answered','insufficient']},claims:{type:'ARRAY',items:{type:'OBJECT',properties:{text:{type:'STRING'},sources:{type:'ARRAY',items:{type:'STRING'}}},required:['text','sources']}}},required:['status','claims']};
 export function validate(raw,ids){
  const r=JSON.parse(raw);if(!r||!Array.isArray(r.claims)||r.claims.length>8)throw Error('invalid_answer');
@@ -19,7 +19,7 @@ export async function reserve(storage,now=Date.now()){
  return storage.transaction(async tx=>{let r=await tx.get('budget');if(!r||r.day!==day)r={day,dayCount:0,minute,minuteCount:0};if(r.minute!==minute){r.minute=minute;r.minuteCount=0}if(r.dayCount>=DAILY||r.minuteCount>=MINUTE)return false;r.dayCount++;r.minuteCount++;await tx.put('budget',r);return true});
 }
 export class Quota {constructor(ctx){this.storage=ctx.storage}async fetch(req){if(req.method!=='POST')return error(405,'method');return (await reserve(this.storage))?json(200,{allowed:true}):error(429,'budget_exhausted')}}
-export async function handle(req,env,fetcher=fetch){
+export async function handle(req,env,fetcher=(...args)=>globalThis.fetch(...args)){
  const url=new URL(req.url);if(url.protocol!=='https:')return error(403,'https_required');
  if(url.pathname!=='/ask'||url.search)return error(404,'not_found');if(req.method!=='POST')return error(405,'method');
  // CLI-only preview. No browser CORS until the mobile interface has been reviewed.
@@ -32,13 +32,24 @@ export async function handle(req,env,fetcher=fetch){
  const entry=catalog[input.intent],ids=entry.evidence.map(x=>x.id);
  let permit;try{permit=await env.QUOTA.get(env.QUOTA.idFromName('global')).fetch('https://quota.internal/reserve',{method:'POST'})}catch{return error(503,'quota_unavailable')}
  if(permit.status===429)return error(429,'budget_exhausted');if(!permit.ok)return error(503,'quota_unavailable');
+ let phase='prepare_request',signal;
  try{
  const payload={systemInstruction:{parts:[{text:'Answer in literary Macedonian. Use only the supplied evidence. Preserve source year, standard vs optional equipment, and provisional applicability. Cite supplied IDs for all factual claims. If evidence is insufficient, return insufficient with empty claims.'}]},contents:[{role:'user',parts:[{text:JSON.stringify({question:entry.question,evidence:entry.evidence})}]}],generationConfig:{temperature:0.1,maxOutputTokens:2048,responseMimeType:'application/json',responseSchema:schema}};
- const r=await fetcher(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,{method:'POST',redirect:'error',headers:{'x-goog-api-key':env.GEMINI_API_KEY,'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(45000)});
- if(!r.ok)return error(r.status===429?429:502,'provider_unavailable');
- const data=await r.json(),c=data.candidates?.[0];if(c?.finishReason!=='STOP')return error(502,'incomplete_response');
+ signal=AbortSignal.timeout(45000);
+ phase='provider_fetch';
+ const r=await fetcher(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,{method:'POST',redirect:'error',headers:{'x-goog-api-key':env.GEMINI_API_KEY,'Content-Type':'application/json'},body:JSON.stringify(payload),signal});
+ if(!r.ok)return error(r.status===429?429:502,'provider_unavailable',Number.isInteger(r.status)&&r.status>=100&&r.status<=599?'upstream_'+r.status:'upstream_unknown');
+ phase='provider_json';
+ const data=await r.json(),c=data?.candidates?.[0];
+ if(!c)return error(502,'incomplete_response','no_candidate');
+ if(c.finishReason!=='STOP'){const known=['MAX_TOKENS','SAFETY','RECITATION','OTHER','BLOCKLIST','PROHIBITED_CONTENT','SPII','MALFORMED_FUNCTION_CALL','UNEXPECTED_TOOL_CALL'];return error(502,'incomplete_response','finish_'+(known.includes(c.finishReason)?c.finishReason:'UNKNOWN'));}
+ phase='response_validation';
  const raw=c.content?.parts?.filter(p=>!p.thought&&typeof p.text==='string').map(p=>p.text).join('');
+ if(!raw)return error(502,'generation_unavailable','empty_response');
  const answer=validate(raw,ids);return json(200,{answer,fitment:entry.fitment,sourceRefs:ids,model:MODEL,usage:Number.isSafeInteger(data.usageMetadata?.totalTokenCount)?data.usageMetadata.totalTokenCount:null});
- }catch{return error(502,'generation_unavailable')}
+ }catch(e){
+ const code=signal?.aborted||e?.name==='AbortError'||e?.name==='TimeoutError'?'network_timeout':phase==='prepare_request'?'request_setup_error':phase==='provider_fetch'?'network_error':phase==='provider_json'?'invalid_upstream_json':e?.message==='invalid_citation'?'invalid_citation':e?.message==='invalid_answer'?'invalid_answer':'invalid_json_response';
+ return error(502,'generation_unavailable',code);
+ }
 }
 export default {fetch:(req,env)=>handle(req,env)};
