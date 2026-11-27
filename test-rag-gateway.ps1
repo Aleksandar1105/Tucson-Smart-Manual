@@ -18,8 +18,8 @@ try {
     $headers = @{ Authorization = "Bearer $env:TUCSON_GATEWAY_TOKEN" }
     $tests = @(
         @{q='Колкав е капацитетот на резервоарот?'; pattern='\b54\b'; source='MK-MY26:PDF-2'},
-        @{q='Колку степени има 7DCT менувачот?'; pattern='7|седум'; source='EU-MY25:PDF-307'},
-        @{q='Дали Premium има камера 360?'; pattern='Impression|Импреш'; source='MK-MY26:PDF-2'},
+        @{q='Колку степени има 7DCT менувачот?'; pattern='(?s)^(?=.*(?:\b7\b|седум))(?=.*напред)(?=.*(?:\b1\b|еден|една|едно))(?=.*(?:назад|рикверц)).*'; source='EU-MY25:PDF-307'},
+        @{q='Дали Premium има камера 360?'; pattern='(?s)^(?=.*(?:Impression|Импреш))(?=.*стандард)(?=.*(?:Premium|Премиум)).*'; source='MK-MY26:PDF-2'},
         @{q='Со колку вати е безжичното полнење?'; pattern='\b15\b'; source='MK-MY26:PDF-2'},
         @{q='After-Blow'; local=$true},
         @{q='Кој е главниот град на Марс?'; local=$true}
