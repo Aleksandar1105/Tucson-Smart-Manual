@@ -22,3 +22,8 @@
 - Operator regression: 68/68 PASS, commit 7e83f02; first live source-aware answer correct (54 L, MK-MY26:PDF-2, 804 tokens). Second request returned upstream_503; remaining tests not run.
 - Retry explicit upstream HTTP 503 only: at most two retries (2 s, 4 s), respect Retry-After up to 10 s, stop if longer; shared 45 s abort deadline. No retry on quota (429), client errors, network failures, or rejected citations. Retries may count toward provider quota.
 - Eight new mocked tests; live verification pending. Local consent and provenance constraints unchanged. No deployment changes.
+
+## V3.0.3B5 — clarify source scope and targeted retest
+- Operator: ff5a00f regression 76/76; dded361 diagnostic run 3/5, plus prior test 1 PASS. DCT returned insufficient despite relevant evidence (1715 tokens); camera returned HTTP 503; wireless 15 W and both local refusals PASS. Root cause of provider 503 unknown; no extra retries.
+- Clarify gear-count evidence without unrelated clutch-construction uncertainty; retain provisional source classification. Camera evidence distinguishes standard trim from individual fitment. Two additional regression tests. Local Node test run 78/78 PASS before publishing; live and PowerShell verification pending.
+- RetestFailed switch runs only cases 2 and 3; 10-second pause between calls. No changes to model, credentials, consent, retry policy or production deployment. If recurring failures, evaluate an alternative available free-tier model before any HTTPS deployment.
