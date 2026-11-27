@@ -1,4 +1,4 @@
-﻿param([switch]$Diagnostic)
+﻿param([switch]$Diagnostic, [switch]$RetestFailed)
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 Write-Host 'This pilot sends four fixed questions and short paraphrased vehicle facts to Gemini. No full PDF, VIN, or personal data. Free-tier requests may be used to improve Google products.'
@@ -26,6 +26,7 @@ try {
     )
     $order = @(1,2,3,4,5,6)
     if ($Diagnostic) { $order = @(2,5,6,3,4) }
+    if ($RetestFailed) { $order = @(2,3) }
     $passed = 0
     $failed = @()
     foreach ($i in $order) {
@@ -51,10 +52,11 @@ try {
             Write-Host "Test ${i}: FAIL (HTTP $status or validation failure; see gateway diagnostic above)"
             $failed += $i
         }
-        if ($Diagnostic -and !$t.local -and $i -ne $order[-1]) { Start-Sleep -Seconds 10 }
+        if (($Diagnostic -or $RetestFailed) -and !$t.local -and $i -ne $order[-1]) { Start-Sleep -Seconds 10 }
     }
     Write-Host "RAG gateway pilot: $passed/$($order.Count) structural PASS; manual answer review pending."
     if ($Diagnostic) { Write-Host 'Test 1 skipped (previously confirmed on ff5a00f).' }
+    if ($RetestFailed) { Write-Host 'Only tests 2 and 3 repeated; other results recorded separately.' }
     if ($failed.Count) { throw "Incomplete live QA. Failed tests: $($failed -join ', ')" }
 } finally {
     if ($proc -and !$proc.HasExited) { Stop-Process -Id $proc.Id -ErrorAction SilentlyContinue }
