@@ -12,3 +12,6 @@ test('HTTP pilot validates provenance, skips unsupported and rejects client evid
 
 test("DCT evidence distinguishes gear count from vehicle fitment",()=>{const r=resolve(pilotQuestions[1]);assert.equal(r.fitment,"provisional");assert.match(r.evidence[0].text,/7 forward gears and 1 reverse gear/);assert.match(r.evidence[1].text,/7-speed 7DCT/);});
 test("camera evidence preserves standard versus individual fitment distinction",()=>{const r=resolve(pilotQuestions[2]);assert.equal(r.fitment,"higher_trim");assert.match(r.evidence[0].text,/not as standard Premium equipment/);assert.match(r.evidence[0].text,/does not establish the equipment of an individual vehicle/);});
+
+test('scoped DCT prompt asks both directions and retains provisional fitment',()=>{const r=resolve(pilotQuestions[1]);assert.notEqual(r.question,pilotQuestions[1]);assert.match(r.question,/напред.*назад/);assert.match(r.question,/MY25/);assert.equal(r.fitment,'provisional');});
+test('scoped camera prompt asks listed standard equipment, not individual fitment',()=>{const r=resolve(pilotQuestions[2]);assert.notEqual(r.question,pilotQuestions[2]);assert.match(r.question,/стандардна опрема на Premium/);assert.match(r.question,/не за индивидуалното возило/);assert.equal(r.fitment,'higher_trim');assert.equal(resolve(pilotQuestions[2]+' VIN ABC123').status,'unsupported');});
