@@ -1,2 +1,1 @@
-Tucson Smart Manual V2.1
-Распакувај ги сите датотеки во ист директориум на HTTPS хостинг. Не објавувај го упатството јавно без соодветна дозвола. Отвори index.html во Chrome на Android, почекај „Офлајн пакетот е подготвен“, па избери Инсталирај апликација или Chrome > Додај на почетен екран. Провери во авионски режим. За локален тест на компјутер: python -m http.server 8000, потоа http://localhost:8000. Локалната file:// адреса не поддржува PWA. Пребарувањето е локално, не генеративен AI.
+Tucson Smart Manual V2.2 — private use only. Serve over HTTPS or localhost. Wait for offline ready before disconnecting. All 612 pages retained from V2.1. Search is extractive, not generative. Do not publish original manual publicly.
