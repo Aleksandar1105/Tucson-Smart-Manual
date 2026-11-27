@@ -12,11 +12,23 @@ try {
     if ($proc.HasExited) { throw 'Gateway failed to start.' }
     $headers = @{ Authorization = "Bearer $env:TUCSON_GATEWAY_TOKEN" }
     $url = 'http://127.0.0.1:8787/ask'
+    $i = 0
     foreach ($q in @('What is the fuel tank capacity? Answer in Macedonian.', 'Which transmission does the demonstration vehicle have? Answer in Macedonian.')) {
+        $i++
+        Write-Host "Live test $i"
         $body = @{question=$q} | ConvertTo-Json -Compress
         $response = Invoke-RestMethod -Method Post -Uri $url -Headers $headers -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($body)) -TimeoutSec 60
         $response | ConvertTo-Json -Depth 8
+        if ($i -eq 1 -and ($response.answer.status -ne 'answered' -or @($response.answer.claims).Count -lt 1 -or (($response.answer.claims.text -join ' ') -notmatch '\b54\b'))) {
+            throw 'FAIL: expected supported answer with 54.'
+        }
+        if ($i -eq 2 -and ($response.answer.status -ne 'insufficient' -or @($response.answer.claims).Count -ne 0)) {
+            throw 'FAIL: expected insufficient with no claims.'
+        }
+        Write-Host "Live test ${i}: PASS"
+
     }
+    Write-Host "Live gateway: 2/2 PASS"
 } finally {
     if ($proc -and !$proc.HasExited) { Stop-Process -Id $proc.Id -ErrorAction SilentlyContinue }
     $env:TUCSON_GEMINI_KEY = $oldKey
