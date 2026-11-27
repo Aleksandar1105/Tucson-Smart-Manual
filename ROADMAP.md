@@ -19,3 +19,7 @@ No API keys in source, browser bundles, or public Git history. Local model downl
 
 ## V3.1 candidates
 - Conversation context, voice input, vehicle profile, local conversation history.
+
+## V3.0.1 feasibility test — 2026-11-27
+- Qwen3-1.7B-q4f16_1-MLC: rejected after operator screenshots of three ungrounded Macedonian prompts. Repetitive and incorrect DCT explanation, confused adaptive cruise control with transmission clutches, inadequate uncertainty handling. Decode reported 64.8–83.0 tokens/s; actual test device not confirmed. No grounded retrieval test performed.
+- Next candidate: Qwen3-4B, fresh chat for each question; evaluate Macedonian, factual accuracy, evidence adherence, and Android feasibility. If inadequate, evaluate Gemini with server-side key storage, authentication and free-tier limits. Stable deployment unchanged.
