@@ -21,6 +21,11 @@ const cases=[
  ['Со колку вати е безжичното полнење?', 'wireless', [['MK-MY26:PDF-2','The local MY2026 dealer specification lists a front wireless phone charger rated at 15 W under Premium additions.',/PREMIUM[\s\S]*15W/]]]
 ];
 export const pilotQuestions=Object.freeze(cases.map(c=>c[0]));
+// Only fixed, reviewed prompts; the caller's arbitrary text never reaches Gemini.
+const scopedQuestions={
+ dct:'Според европското упатство MY25, колку степени за движење напред и колку за движење назад има опишаниот 7DCT? Одговори за двете насоки и наведи го изворот. Не потврдувај конструктивни детали за конкретно возило MY2026.',
+ surround:'Според дилерската спецификација MY2026, дали камерата 360° (SVM) е наведена како стандардна опрема на Premium или како додаток на повисок пакет? Наведи го пакетот. Прашањето е за стандардната опрема според спецификацијата, не за индивидуалното возило.'
+};
 const norm=s=>String(s??'').normalize('NFKC').toLowerCase().replace(/\s+/g,' ').trim();
 export function createPilotResolver(sources){
  const idx=buildSourceIndex(sources);
@@ -33,7 +38,7 @@ export function createPilotResolver(sources){
  if(!found||!anchor.test(found.text))throw Error('pilot_evidence_mismatch');
  return {id,text};
  });
- return [norm(question),{status:'candidate_evidence',question,fitment:r.fitment,evidence}];
+ return [norm(question),{status:'candidate_evidence',question:scopedQuestions[topic]??question,fitment:r.fitment,evidence}];
  }));
  return q=>{
  const match=prepared.get(norm(q));
