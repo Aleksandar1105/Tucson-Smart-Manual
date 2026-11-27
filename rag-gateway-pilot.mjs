@@ -16,8 +16,8 @@ export function loadPilotSources(dir=new URL('./.tucson-local/',import.meta.url)
 }
 const cases=[
  ['Колкав е капацитетот на резервоарот?', 'profile', [['MK-MY26:PDF-2','The local MY2026 dealer specification lists fuel tank capacity as 54 litres.',/54\s*L/]]],
- ['Колку степени има 7DCT менувачот?', 'dct', [['EU-MY25:PDF-307','The MY25 candidate manual describes a dual-clutch transmission with seven forward gears and one reverse gear. Exact MY2026 clutch construction is not established.',/7\s+forward speeds and one reverse speed/],['MK-MY26:PDF-1','The local MY2026 dealer specification lists Premium 1.6 T-GDI 180 hp 2WD with 7DCT.',/PREMIUM[\s\S]*7DCT/]]],
- ['Дали Premium има камера 360?', 'surround', [['MK-MY26:PDF-2','In the local MY2026 dealer specification the 360-degree Surround View Monitor (SVM) is an addition at Impression above Premium. It is not listed as Premium standard equipment. Individual vehicle fitment is unverified.',/IMPRESSION[\s\S]*SVM/]]],
+ ['Колку степени има 7DCT менувачот?', 'dct', [['EU-MY25:PDF-307','The MY25 manual states that the dual-clutch transmission has 7 forward gears and 1 reverse gear. This answers the gear-count question for the transmission described in that manual.',/7\s+forward speeds and one reverse speed/],['MK-MY26:PDF-1','The local MY2026 dealer specification explicitly lists the Premium 1.6 T-GDI 180 hp 2WD automatic transmission as a 7-speed 7DCT.',/PREMIUM[\s\S]*7DCT/]]],
+ ['Дали Premium има камера 360?', 'surround', [['MK-MY26:PDF-2','The MY2026 dealer specification lists the 360-degree camera (SVM) under Impression additions, not as standard Premium equipment. This does not establish the equipment of an individual vehicle.',/IMPRESSION[\s\S]*SVM/]]],
  ['Со колку вати е безжичното полнење?', 'wireless', [['MK-MY26:PDF-2','The local MY2026 dealer specification lists a front wireless phone charger rated at 15 W under Premium additions.',/PREMIUM[\s\S]*15W/]]]
 ];
 export const pilotQuestions=Object.freeze(cases.map(c=>c[0]));
