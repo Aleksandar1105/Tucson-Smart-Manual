@@ -1,8 +1,8 @@
 'use strict';
-const questions=['Колкав е капацитетот на резервоарот?','Колку степени има 7DCT менувачот?','Дали Premium има камера 360?','Со колку вати е безжичното полнење?'];
+const questions=['Колкав е капацитетот на резервоарот?','Колку степени има 7DCT менувачот?','Дали Premium има камера 360?','Со колку вати е безжичното полнење?','Димензии на гуми','Греење на волан','Амбиентално осветлување','Панорамски покрив'];
 const el=id=>document.getElementById(id), thread=el('thread'), input=el('question'), send=el('send'), clear=el('clear');
-const fitment={provisional:'Европското MY25 упатство е привремен извор; применливоста за MY2026 не е целосно потврдена.',higher_trim:'Спецификацијата не ја потврдува опремата на поединечно возило.',listed_standard:'Наведено како стандардна опрема во локалната спецификација.',listed_specification:'Податок од локалната спецификација.'};
-const reasons={unconfirmed_feature:'Функцијата не е потврдена во достапните извори.',no_curated_topic:'Прашањето не е опфатено во пробниот модул.',outside_pilot_scope:'Прашањето е надвор од четирите поддржани прашања.'};
+const fitment={provisional:'Европското MY25 упатство е привремен извор; применливоста за MY2026 не е целосно потврдена.',higher_trim:'Спецификацијата не ја потврдува опремата на поединечно возило.',listed_standard:'Наведено како стандардна опрема во локалната спецификација.',listed_specification:'Податок од локалната спецификација, не потврда за поединечно возило.',optional:'Опционална опрема; провери ја конфигурацијата на конкретното возило.'};
+const reasons={unconfirmed_feature:'Функцијата не е потврдена во достапните извори.',no_curated_topic:'Прашањето не е опфатено во пробниот модул.',multiple_topics_require_clarification:'Постави едно прашање за една тема.',outside_pilot_scope:'Прашањето е надвор од проверените теми или формулации.'};
 let busy=false;
 function add(tag,text,parent,cls){const n=document.createElement(tag);n.textContent=text;if(cls)n.className=cls;parent.append(n);return n;}
 function message(kind,label,text){const n=add('article','',thread,'message '+kind);add('strong',label,n);if(text)add('p',text,n);return n;}

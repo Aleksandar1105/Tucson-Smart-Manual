@@ -3,7 +3,8 @@ import {readFileSync} from 'node:fs';
 import {randomBytes} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
 import {createGateway,ALTERNATIVE_MODEL} from './ai-gateway.mjs';
-import {createPilotResolver,loadPilotSources} from './rag-gateway-pilot.mjs';
+import {loadPilotSources} from './rag-gateway-pilot.mjs';
+import {createExpandedResolver} from './rag-expanded.mjs';
 const assets=new Map([['/',['index.html','text/html']],['/preview.css',['preview.css','text/css']],['/preview.js',['preview.js','text/javascript']]].map(([path,[name,type]])=>[path,{body:readFileSync(new URL('./ai-preview/'+name,import.meta.url)),type:type+'; charset=utf-8'}]));
 export function createPreviewServer({port=8790,upstreamPort=8791,token,fetcher=fetch}){
  if(typeof token!=='string'||token.length<32)throw Error('missing_token');
@@ -28,7 +29,7 @@ export function createPreviewServer({port=8790,upstreamPort=8791,token,fetcher=f
 async function start(){
  if(process.env.TUCSON_PILOT_CONSENT!=='YES'||!process.env.TUCSON_GEMINI_KEY)throw Error('consent_and_key_required');
  const token=randomBytes(32).toString('hex');
- const gateway=createGateway({key:process.env.TUCSON_GEMINI_KEY,token,port:8791,model:ALTERNATIVE_MODEL,resolveEvidence:createPilotResolver(loadPilotSources()),maxRequests:6});
+ const gateway=createGateway({key:process.env.TUCSON_GEMINI_KEY,token,port:8791,model:ALTERNATIVE_MODEL,resolveEvidence:createExpandedResolver(loadPilotSources()),maxRequests:6});
  const preview=createPreviewServer({token});
  const listen=(s,p)=>new Promise((resolve,reject)=>{s.once('error',reject);s.listen(p,'127.0.0.1',resolve)});
  try{await listen(gateway,8791);await listen(preview,8790)}catch(e){gateway.close();preview.close();throw e}

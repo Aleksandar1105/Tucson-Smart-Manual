@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
-Write-Host 'Local UI preview; only four fixed questions and reviewed facts sent to Gemini. Free-tier data-use terms apply.'
+Write-Host 'Local UI preview; only reviewed canonical questions and short facts sent to Gemini. Free-tier data-use terms apply.'
 if ((Read-Host 'Type YES to consent') -cne 'YES') { return }
 $secure = Read-Host 'Gemini API key' -AsSecureString
 $oldKey=$env:TUCSON_GEMINI_KEY
