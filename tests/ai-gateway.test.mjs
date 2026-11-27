@@ -1,4 +1,4 @@
-import {test} from 'node:test';import assert from 'node:assert/strict';import {generate,validateAnswer,createGateway} from '../ai-gateway.mjs';
+import {test} from 'node:test';import assert from 'node:assert/strict';import {generate,validateAnswer,createGateway,fetchWith503Retry} from '../ai-gateway.mjs';
 const valid={status:'answered',claims:[{text:'54 литри.',sources:['TEST-1']}]};
 const mock=(answer=valid,finishReason='STOP')=>async(url,opt)=>{assert.match(url,/gemini-4-hydrogen:generateContent$/);assert.equal(opt.headers['x-goog-api-key'],'fake-key');assert.match(opt.body,/TEST-1/);assert.ok(!opt.body.includes('fake-key'));return {ok:true,json:async()=>({candidates:[{finishReason,content:{parts:[{thought:true,text:'hidden'},{text:JSON.stringify(answer)}]}}],usageMetadata:{totalTokenCount:100}})}};
 test('valid citation',()=>assert.deepEqual(validateAnswer(JSON.stringify(valid),['TEST-1']),valid));
@@ -24,3 +24,15 @@ for(const [label,fetcher,expected] of [
  ['empty response',async()=>({ok:true,json:async()=>({candidates:[{finishReason:'STOP',content:{parts:[]}}]})}),'empty_response'],
  ['unexpected error',async()=>({ok:true,json:async()=>({candidates:[{finishReason:'STOP',content:{parts:{secret:'fake-key'}}}]})}),'internal_error'],
 ])test('redacted diagnostic: '+label,async()=>{const port=18788,token='a'.repeat(32),logs=[];const s=createGateway({key:'fake-key',token,port,fetcher,log:x=>logs.push(x)});await new Promise((resolve,reject)=>{s.once('error',reject);s.listen(port,'127.0.0.1',resolve)});try{const r=await fetch(`http://127.0.0.1:${port}/ask`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${token}`},body:JSON.stringify({question:'test'})});assert.equal(r.status,502);assert.deepEqual(await r.json(),{error:'generation_unavailable',diagnostic:expected});assert.deepEqual(logs,['Gateway diagnostic: '+expected]);}finally{await new Promise(r=>s.close(r));}});
+
+// Explicit 503 only; mock delays make tests deterministic and offline.
+const unavailable=(header=null)=>({ok:false,status:503,headers:{get:()=>header}});
+const runRetry=async(responses)=>{let calls=0;const delays=[];const signal=AbortSignal.timeout(45000);const result=await fetchWith503Retry(async(url,opt)=>{assert.equal(opt.signal,signal);return responses[calls++];},'https://example.invalid',{signal},{wait:async(ms)=>delays.push(ms),clock:()=>0});return {calls,delays,result};};
+test('503 then success: one retry',async()=>{const r=await runRetry([unavailable(),{ok:true,status:200}]);assert.equal(r.calls,2);assert.deepEqual(r.delays,[2000]);assert.equal(r.result.status,200)});
+test('two 503 then success: bounded backoff',async()=>{const r=await runRetry([unavailable(),unavailable(),{ok:true,status:200}]);assert.equal(r.calls,3);assert.deepEqual(r.delays,[2000,4000]);assert.equal(r.result.status,200)});
+test('persistent 503: stops at three',async()=>{let calls=0;await assert.rejects(generate({question:'test',key:'fake-key',fetcher:async()=>{calls++;return unavailable()},retryWait:async()=>{}}),/upstream_503/);assert.equal(calls,3)});
+test('429 and 400 never retried',async()=>{for(const status of [400,429]){const r=await runRetry([{ok:false,status}]);assert.equal(r.calls,1);assert.deepEqual(r.delays,[])}});
+test('Retry-After respected within limit',async()=>{const r=await runRetry([unavailable('6'),{ok:true,status:200}]);assert.deepEqual(r.delays,[6000])});
+test('long Retry-After stops without repeating',async()=>{const r=await runRetry([unavailable('30')]);assert.equal(r.calls,1);assert.equal(r.result.status,503);assert.deepEqual(r.delays,[])});
+test('invalid cited answer after 503 still blocked',async()=>{let calls=0;await assert.rejects(generate({question:'test',key:'fake-key',retryWait:async()=>{},fetcher:async(...args)=>++calls===1?unavailable():mock({status:'answered',claims:[{text:'x',sources:['FAKE']}]})(...args)}),/invalid_citation/);assert.equal(calls,2)});
+test('aborted deadline prevents next retry',async()=>{const c=new AbortController();let calls=0;await assert.rejects(fetchWith503Retry(async()=>{calls++;return unavailable()},'https://example.invalid',{signal:c.signal},{wait:async()=>c.abort()}),{name:'AbortError'});assert.equal(calls,1)});

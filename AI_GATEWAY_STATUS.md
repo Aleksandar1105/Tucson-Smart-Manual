@@ -17,3 +17,8 @@
 - Local Node 22.16.0 regression: 68/68 PASS (56 existing + 12 new). Mock tests cover source matching, refusal, missing anchor, mutation isolation, evidence validation, HTTP no-call behavior, injection rejection, and unknown citation rejection.
 - Live test requires affirmative consent and masked API key; checks 4 supported replies and 2 local refusals. PowerShell not executed in developer environment. Structural QA does not validate all factual claims; manual review pending. Free-tier processing terms/permission remain applicable. Do not publish new source data. No public gateway or PWA deployment change.
 - Next: live pilot review; decide on private HTTPS deployment and permitted source import for Android; only then expand retrieval and UI. No paid services activated by this patch.
+
+## V3.0.3B3 — bounded upstream 503 retries
+- Operator regression: 68/68 PASS, commit 7e83f02; first live source-aware answer correct (54 L, MK-MY26:PDF-2, 804 tokens). Second request returned upstream_503; remaining tests not run.
+- Retry explicit upstream HTTP 503 only: at most two retries (2 s, 4 s), respect Retry-After up to 10 s, stop if longer; shared 45 s abort deadline. No retry on quota (429), client errors, network failures, or rejected citations. Retries may count toward provider quota.
+- Eight new mocked tests; live verification pending. Local consent and provenance constraints unchanged. No deployment changes.
