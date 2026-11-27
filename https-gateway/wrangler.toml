@@ -1,0 +1,13 @@
+name = "tucson-private-ai-preview"
+main = "worker.mjs"
+compatibility_date = "2026-11-27"
+workers_dev = true
+preview_urls = false
+[vars]
+ENABLED = "NO"
+[[durable_objects.bindings]]
+name = "QUOTA"
+class_name = "Quota"
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Quota"]
